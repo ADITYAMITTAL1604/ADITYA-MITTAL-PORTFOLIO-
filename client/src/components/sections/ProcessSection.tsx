@@ -22,7 +22,7 @@ export default function ProcessSection() {
       if (window.innerWidth >= 768) {
         sectionRef.current!.querySelectorAll("[data-s-fade-in-out]").forEach((el) => {
           gsap.fromTo(el,
-            { opacity: 0.15, filter: "blur(4px)" },
+            { opacity: 0.5, filter: "blur(2px)" },
             {
               opacity: 1, filter: "blur(0px)",
               scrollTrigger: {
@@ -34,7 +34,7 @@ export default function ProcessSection() {
             }
           );
           gsap.to(el, {
-            opacity: 0.15, filter: "blur(4px)",
+            opacity: 0.5, filter: "blur(2px)",
             scrollTrigger: {
               trigger: el,
               start: "bottom 55%",
