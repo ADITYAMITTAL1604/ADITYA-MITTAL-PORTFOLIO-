@@ -74,7 +74,6 @@ export default function Home() {
       {/* Fixed UI Chrome */}
       <CustomCursor />
       <Navbar onContactOpen={handleContactOpen} />
-      <CornerBrackets />
 
       {/* Fixed Background Layers */}
       <Starfield />
