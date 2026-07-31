@@ -36,27 +36,37 @@ export default function ServicesMobile() {
 
   useEffect(() => {
     if (!sectionRef.current) return;
-    const ctx = gsap.context(() => {
-      sectionRef.current!.querySelectorAll("[data-s-lines]").forEach((el) => {
-        gsap.fromTo(el,
-          { opacity: 0, y: 20 },
-          {
-            opacity: 1, y: 0, duration: 0.8, ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none" },
+      const headingEl = sectionRef.current!.querySelector(".mobile-heading");
+      if (headingEl) {
+        const text = headingEl.textContent || "";
+        const words = text.split(/\s+/).filter(Boolean);
+        headingEl.innerHTML = words.map(w => `<span style="opacity: 0.15">${w}</span>`).join(" ");
+        gsap.to(headingEl.querySelectorAll("span"), {
+          opacity: 1,
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: headingEl,
+            start: "top 85%",
+            end: "bottom 50%",
+            scrub: true,
           }
-        );
-      });
+        });
+      }
 
       sectionRef.current!.querySelectorAll("[data-s-fade-in]").forEach((el) => {
         gsap.fromTo(el,
-          { opacity: 0, y: 25 },
+          { opacity: 0.2, filter: "blur(4px)", y: 20 },
           {
-            opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
-            scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none" },
+            opacity: 1, filter: "blur(0px)", y: 0,
+            scrollTrigger: { 
+              trigger: el, 
+              start: "top 90%", 
+              end: "top 60%", 
+              scrub: true 
+            },
           }
         );
       });
-    }, sectionRef);
 
     return () => ctx.revert();
   }, []);
@@ -67,10 +77,10 @@ export default function ServicesMobile() {
         {/* Heading */}
         <div className="px-8">
           <div className="flex flex-col gap-6 w-fit mx-auto">
-            <h2 data-s-lines className="heading-2 font-instrument-serif w-full max-w-[27.5rem] indent-20">
+            <h2 className="mobile-heading heading-2 font-instrument-serif w-full max-w-[27.5rem] indent-20">
               From Data to Deployment, I've Got You Covered.
             </h2>
-            <p data-s-lines className="body-sm md:max-w-[26.25rem] ml-20">
+            <p data-s-fade-in className="body-sm md:max-w-[26.25rem] ml-20">
               I build intelligent software systems that solve real problems — AI pipelines, scalable backends, and full-stack platforms that drive impact.
             </p>
           </div>
@@ -80,7 +90,7 @@ export default function ServicesMobile() {
         <div className="relative flex flex-col gap-8 max-w-[30rem] ml-auto">
           {serviceGroups.map((group, idx) => (
             <div key={idx} className="flex flex-col gap-2">
-              <p data-s-lines className="heading-3 font-instrument-serif px-8 pb-2">{group.title}</p>
+              <p data-s-fade-in className="heading-3 font-instrument-serif px-8 pb-2">{group.title}</p>
               <div className="overflow-hidden px-4">
                 {group.cards.map((card, cIdx) => (
                   <div

@@ -44,18 +44,34 @@ export default function ProcessSection() {
           });
         });
       } else {
-        // Mobile: simple fade-in on scroll
+        // Mobile: scrub-based fade in for steps and print-opacity for heading
+        const headingEl = sectionRef.current!.querySelector(".mobile-heading");
+        if (headingEl) {
+          const text = headingEl.textContent || "";
+          const words = text.split(/\s+/).filter(Boolean);
+          headingEl.innerHTML = words.map(w => `<span style="opacity: 0.15">${w}</span>`).join(" ");
+          gsap.to(headingEl.querySelectorAll("span"), {
+            opacity: 1,
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: headingEl,
+              start: "top 85%",
+              end: "bottom 50%",
+              scrub: true,
+            }
+          });
+        }
+
         sectionRef.current!.querySelectorAll("[data-s-mobile-step]").forEach((el) => {
           gsap.fromTo(el,
-            { opacity: 0, y: 30 },
+            { opacity: 0.2, filter: "blur(4px)", y: 30 },
             {
-              opacity: 1, y: 0,
-              duration: 0.6,
-              ease: "power2.out",
+              opacity: 1, filter: "blur(0px)", y: 0,
               scrollTrigger: {
                 trigger: el,
-                start: "top 85%",
-                toggleActions: "play none none none",
+                start: "top 90%",
+                end: "top 60%",
+                scrub: true,
               },
             }
           );
@@ -113,7 +129,7 @@ export default function ProcessSection() {
       <div className="md:hidden px-6">
         {/* Heading */}
         <div className="mb-10">
-          <h2 className="heading-3 font-instrument-serif mb-3">
+          <h2 className="mobile-heading heading-3 font-instrument-serif mb-3">
             A methodology built around scalability and precision.
           </h2>
           <p className="body-md text-[var(--muted-foreground)]">
