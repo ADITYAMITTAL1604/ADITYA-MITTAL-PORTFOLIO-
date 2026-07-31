@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Starfield — 3D Galaxy Cruising Effect (High Performance)
- * Stars emit from a central vanishing point and move outward.
+ * Starfield — 3D Galaxy Cruising Effect (High Intensity & High Performance)
+ * Stars emit from a central vanishing point and move outward at higher speed & brightness.
  */
 export default function Starfield() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,9 +23,9 @@ export default function Starfield() {
     let targetMouseY = 0;
 
     const isMobile = window.innerWidth < 768;
-    const STAR_COUNT = isMobile ? 250 : 500;
+    const STAR_COUNT = isMobile ? 400 : 800;
     const MAX_DEPTH = 1000;
-    const BASE_SPEED = 2.5;
+    const BASE_SPEED = 4.2; // Increased speed for faster space travel
 
     // Use typed arrays for maximum CPU cache efficiency
     const x = new Float32Array(STAR_COUNT);
@@ -54,8 +54,8 @@ export default function Starfield() {
         y[i] = (Math.random() - 0.5) * H * 4;
         z[i] = Math.random() * MAX_DEPTH;
         pz[i] = z[i];
-        size[i] = Math.random() * 1.5 + 0.5;
-        hue[i] = 240 + Math.random() * 60;
+        size[i] = Math.random() * 1.8 + 0.6; // Slightly larger stars
+        hue[i] = 230 + Math.random() * 70; // Vibrant violet to cyan spectrum
       }
     };
 
@@ -63,8 +63,8 @@ export default function Starfield() {
     
     const onResize = () => init();
     const onMouseMove = (e: MouseEvent) => {
-      targetMouseX = (e.clientX / W - 0.5) * 150;
-      targetMouseY = (e.clientY / H - 0.5) * 150;
+      targetMouseX = (e.clientX / W - 0.5) * 180;
+      targetMouseY = (e.clientY / H - 0.5) * 180;
     };
     
     window.addEventListener("resize", onResize);
@@ -99,20 +99,29 @@ export default function Starfield() {
         const sy = y[i] * proj + cy;
 
         // Skip rendering if off screen
-        if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
+        if (sx < -60 || sx > W + 60 || sy < -60 || sy > H + 60) continue;
 
         const px = x[i] * pProj + cx;
         const py = y[i] * pProj + cy;
 
-        const sSize = size[i] * proj * 0.6;
-        const alpha = Math.min(1, (MAX_DEPTH - z[i]) / (MAX_DEPTH * 0.5));
+        const sSize = size[i] * proj * 0.85;
+        const alpha = Math.min(1, (MAX_DEPTH - z[i]) / (MAX_DEPTH * 0.45));
 
-        ctx.lineWidth = Math.max(0.5, sSize);
-        ctx.strokeStyle = `hsla(${hue[i]}, 80%, 95%, ${alpha * 0.7})`;
+        // Draw motion trail line with high opacity
+        ctx.lineWidth = Math.max(0.7, sSize);
+        ctx.strokeStyle = `hsla(${hue[i]}, 85%, 96%, ${alpha * 0.95})`;
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(sx, sy);
         ctx.stroke();
+
+        // Draw bright core for close stars
+        if (z[i] < MAX_DEPTH * 0.35) {
+          ctx.fillStyle = `hsla(${hue[i]}, 90%, 100%, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sSize * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       animId = requestAnimationFrame(animate);
