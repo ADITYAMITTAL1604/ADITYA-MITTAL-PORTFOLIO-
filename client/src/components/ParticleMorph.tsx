@@ -33,8 +33,8 @@ export default function ParticleMorph() {
     // Detect mobile for performance optimization
     const isMobile = window.innerWidth < 768;
     const PARTICLE_COUNT = isMobile ? 350 : 800;
-    const MOUSE_RADIUS = 250;
-    const MOUSE_FORCE = 100;
+    const MOUSE_RADIUS = isMobile ? 180 : 250;
+    const MOUSE_FORCE = isMobile ? 80 : 100;
 
     // ── Particle type ──
     interface P {
@@ -80,6 +80,18 @@ export default function ParticleMorph() {
     const onMouseLeave = () => { mouse.active = false; };
     window.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseleave", onMouseLeave);
+
+    // ── Touch tracking (for mobile interaction) ──
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+        mouse.active = true;
+      }
+    };
+    const onTouchEnd = () => { mouse.active = false; };
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
 
     // ════════════════════════════════════════════
     // SHAPE GENERATORS
@@ -312,8 +324,8 @@ export default function ParticleMorph() {
         ty += Math.cos(f * 0.8 + i * 0.02) * 4;
         tz += Math.sin(f * 0.5 + i * 0.015) * 5;
 
-        // ── Cursor repulsion ──
-        if (mouse.active && !isMobile) {
+        // ── Cursor / Touch repulsion ──
+        if (mouse.active) {
           const projScale = PERSPECTIVE / (PERSPECTIVE + p.z);
           const screenX = cx + p.x * projScale;
           const screenY = cy + p.y * projScale;
@@ -417,6 +429,8 @@ export default function ParticleMorph() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseleave", onMouseLeave);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
   }, []);
 
