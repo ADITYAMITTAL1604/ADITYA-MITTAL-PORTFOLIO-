@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useLayoutEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import HeroSection from "@/components/sections/HeroSection";
 import StatementSection from "@/components/sections/StatementSection";
@@ -26,18 +26,37 @@ export default function Home() {
     setContactOpen(true);
   }, []);
 
-  // Force scroll to top on load, hide preloader after animation
-  useEffect(() => {
+  // Aggressively force scroll to top on load and hide preloader after animation
+  useLayoutEffect(() => {
+    // 1. Tell browser not to restore scroll
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
     
-    // Slight delay to ensure DOM is ready before forcing scroll
-    requestAnimationFrame(() => {
+    // 2. Clear any hash fragment that might cause the browser to jump down
+    if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
+    // 3. Immediately force scroll to top before paint
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // 4. Also attach a beforeunload listener so the browser saves "0" as the scroll position
+    const handleBeforeUnload = () => {
       window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    });
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
+    // 5. One more check just in case after initial paint
+    window.scrollTo(0, 0);
 
     const timer = setTimeout(() => {
       setShowPreloader(false);
