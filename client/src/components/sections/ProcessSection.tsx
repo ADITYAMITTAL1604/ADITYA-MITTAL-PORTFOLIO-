@@ -18,7 +18,7 @@ export default function ProcessSection() {
   useEffect(() => {
     if (!sectionRef.current) return;
     const ctx = gsap.context(() => {
-      // (Removed data-s-print-opacity logic for steps to prevent conflicting opacity animations)
+      // Desktop: fade-in-out scrub animation
       if (window.innerWidth >= 768) {
         sectionRef.current!.querySelectorAll("[data-s-fade-in-out]").forEach((el) => {
           gsap.fromTo(el,
@@ -43,6 +43,23 @@ export default function ProcessSection() {
             },
           });
         });
+      } else {
+        // Mobile: simple fade-in on scroll
+        sectionRef.current!.querySelectorAll("[data-s-mobile-step]").forEach((el) => {
+          gsap.fromTo(el,
+            { opacity: 0, y: 30 },
+            {
+              opacity: 1, y: 0,
+              duration: 0.6,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: el,
+                start: "top 85%",
+                toggleActions: "play none none none",
+              },
+            }
+          );
+        });
       }
     }, sectionRef);
 
@@ -50,9 +67,9 @@ export default function ProcessSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} data-dissolve-out className="relative hidden md:block mt-[10rem]">
-      {/* Decorative center line + sparkle */}
-      <div className="absolute top-0 left-4 md:left-1/2 w-px h-full">
+    <section ref={sectionRef} data-dissolve-out className="relative mt-[6rem] md:mt-[10rem]">
+      {/* Decorative center line + sparkle (desktop only) */}
+      <div className="hidden md:block absolute top-0 left-1/2 w-px h-full">
         <div className="absolute top-0 left-1/2 w-px h-full md:bg-white/10" />
         <div className="w-6 h-6 sticky top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <svg
@@ -67,8 +84,8 @@ export default function ProcessSection() {
         </div>
       </div>
 
-      {/* Two-column grid */}
-      <div className="grid md:grid-cols-2">
+      {/* ═══ DESKTOP LAYOUT ═══ */}
+      <div className="hidden md:grid md:grid-cols-2">
         {/* Left: Sticky heading */}
         <div className="h-fit md:sticky md:top-1/2 md:-translate-y-1/2 -mb-[45vh] flex flex-col md:items-end items-start md:justify-center gap-4 xl:gap-6 p-8 md:p-12">
           <h2 className="heading-2 font-instrument-serif md:text-right max-w-[20rem] lg:max-w-[25rem] xl:max-w-[32.5rem]">
@@ -89,6 +106,34 @@ export default function ProcessSection() {
               <p className="body-lg text-white/80">{step.description}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ═══ MOBILE LAYOUT ═══ */}
+      <div className="md:hidden px-6">
+        {/* Heading */}
+        <div className="mb-10">
+          <h2 className="heading-3 font-instrument-serif mb-3">
+            A methodology built around scalability and precision.
+          </h2>
+          <p className="body-md text-[var(--muted-foreground)]">
+            No technical debt, no deployment chaos. Just a clear path from system design to a robust, intelligent product.
+          </p>
+        </div>
+
+        {/* Steps as vertical cards */}
+        <div className="flex flex-col gap-8 border-l border-white/10 pl-6">
+          {steps.map((step, i) => (
+            <div key={i} data-s-mobile-step className="flex flex-col opacity-0">
+              <p className="body-lg text-white/40 font-medium">{step.number}</p>
+              <p className="heading-4 font-instrument-serif mt-1">{step.title}</p>
+              <p className="body-md text-white/70 mt-1">{step.description}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8">
+          <PillButton>Let's build something</PillButton>
         </div>
       </div>
     </section>

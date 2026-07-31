@@ -24,9 +24,11 @@ export default function Starfield() {
     let targetMouseX = 0;
     let targetMouseY = 0;
 
-    const STAR_COUNT = 1500; // Increased density
-    const MAX_DEPTH = 1000; // How deep the Z axis goes
-    const BASE_SPEED = 2.8; // Increased cruising speed
+    // Detect mobile for performance
+    const isMobile = window.innerWidth < 768;
+    const STAR_COUNT = isMobile ? 500 : 1500;
+    const MAX_DEPTH = 1000;
+    const BASE_SPEED = 2.8;
 
     interface Star {
       x: number;
@@ -40,9 +42,10 @@ export default function Starfield() {
     let stars: Star[] = [];
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2);
+      const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
       W = window.innerWidth;
       H = window.innerHeight;
+      if (W === 0 || H === 0) return;
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       canvas.style.width = `${W}px`;
@@ -156,6 +159,7 @@ export default function Starfield() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 z-0 pointer-events-none"
+      style={{ willChange: "transform" }}
       aria-hidden="true"
     />
   );
