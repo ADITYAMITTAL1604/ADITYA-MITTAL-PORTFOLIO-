@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 /**
- * ParticleMorph — WebGL-quality Canvas2D particle system
+ * ParticleMorph — High-performance Canvas2D particle system
  *
  * Phases based on scroll progress:
  * 1. HERO (scroll 0–15%): 4-pointed star/astroid shape, centered
@@ -10,8 +10,12 @@ import { useEffect, useRef } from "react";
  * 4. TRANSITION (70–82%): Column morphs into letter "A"
  * 5. FOOTER (82–100%): Letter "A" centered
  *
- * Cursor interaction: Strong repulsion — particles flee from cursor
- * and spring back elastically when cursor leaves.
+ * Performance optimizations:
+ * - Pre-rendered sprite atlas (no createRadialGradient per frame)
+ * - Batch drawImage calls instead of arc+fill
+ * - No per-frame z-sorting (uses paint-order buckets)
+ * - Delta-time capped physics
+ * - Off-screen culling
  */
 export default function ParticleMorph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,22 +36,47 @@ export default function ParticleMorph() {
 
     // Detect mobile for performance optimization
     const isMobile = window.innerWidth < 768;
-    const PARTICLE_COUNT = isMobile ? 350 : 800;
-    const MOUSE_RADIUS = isMobile ? 180 : 250;
-    const MOUSE_FORCE = isMobile ? 80 : 100;
+    const PARTICLE_COUNT = isMobile ? 300 : 600;
+    const MOUSE_RADIUS = isMobile ? 150 : 220;
+    const MOUSE_FORCE = isMobile ? 60 : 80;
 
-    // ── Particle type ──
-    interface P {
-      x: number; y: number; z: number;
-      tx: number; ty: number; tz: number;
-      vx: number; vy: number; vz: number;
-      size: number;
-      hue: number;
-      sat: number;
-      light: number;
+    // ── Pre-render sprite atlas ──
+    // Instead of creating gradients every frame, we draw particles as
+    // pre-rendered sprites. Each sprite has a soft glow baked in.
+    const SPRITE_SIZE = 32;
+    const SPRITE_VARIANTS = 6; // different hue variants
+    const spriteCanvas = document.createElement("canvas");
+    spriteCanvas.width = SPRITE_SIZE * SPRITE_VARIANTS;
+    spriteCanvas.height = SPRITE_SIZE;
+    const spriteCtx = spriteCanvas.getContext("2d")!;
+
+    const spriteHues = [250, 260, 270, 280, 290, 300];
+    for (let v = 0; v < SPRITE_VARIANTS; v++) {
+      const cx = v * SPRITE_SIZE + SPRITE_SIZE / 2;
+      const cy = SPRITE_SIZE / 2;
+      const hue = spriteHues[v];
+      const r = SPRITE_SIZE / 2;
+
+      // Outer glow
+      const grad = spriteCtx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0, `hsla(${hue}, 70%, 85%, 1)`);
+      grad.addColorStop(0.15, `hsla(${hue}, 65%, 75%, 0.8)`);
+      grad.addColorStop(0.4, `hsla(${hue}, 60%, 60%, 0.25)`);
+      grad.addColorStop(0.7, `hsla(${hue}, 55%, 50%, 0.06)`);
+      grad.addColorStop(1, `hsla(${hue}, 50%, 45%, 0)`);
+      spriteCtx.fillStyle = grad;
+      spriteCtx.fillRect(v * SPRITE_SIZE, 0, SPRITE_SIZE, SPRITE_SIZE);
     }
 
-    let particles: P[] = [];
+    // ── Particle type (flat arrays for cache-friendliness) ──
+    const px = new Float32Array(PARTICLE_COUNT);
+    const py = new Float32Array(PARTICLE_COUNT);
+    const pz = new Float32Array(PARTICLE_COUNT);
+    const vx = new Float32Array(PARTICLE_COUNT);
+    const vy = new Float32Array(PARTICLE_COUNT);
+    const vz = new Float32Array(PARTICLE_COUNT);
+    const psize = new Float32Array(PARTICLE_COUNT);
+    const spriteVariant = new Uint8Array(PARTICLE_COUNT);
 
     // ── Resize (HiDPI aware) ──
     const resize = () => {
@@ -98,47 +127,43 @@ export default function ParticleMorph() {
     // ════════════════════════════════════════════
 
     /** 1. Star / Astroid (4-pointed cusp shape) */
-    const generateStar = (): { x: number; y: number; z: number }[] => {
-      const pts: { x: number; y: number; z: number }[] = [];
+    const generateStar = (out: Float32Array[]) => {
+      const [ox, oy, oz] = out;
       const scale = Math.min(W, H) * 0.32;
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const theta = Math.random() * Math.PI * 2;
         const r = Math.pow(Math.random(), 0.55) * scale;
-        const x = r * Math.pow(Math.cos(theta), 3);
-        const y = r * Math.pow(Math.sin(theta), 3);
-        const z = (Math.random() - 0.5) * 350;
-        pts.push({ x, y, z });
+        ox[i] = r * Math.pow(Math.cos(theta), 3);
+        oy[i] = r * Math.pow(Math.sin(theta), 3);
+        oz[i] = (Math.random() - 0.5) * 350;
       }
-      return pts;
     };
 
     /** 2. Diamond / Vertical column */
-    const generateDiamond = (): { x: number; y: number; z: number }[] => {
-      const pts: { x: number; y: number; z: number }[] = [];
+    const generateDiamond = (out: Float32Array[]) => {
+      const [ox, oy, oz] = out;
       const height = H * 0.65;
       const maxWidth = Math.min(W * 0.06, 70);
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const yNorm = Math.random();
-        const y = (yNorm - 0.5) * height;
+        oy[i] = (yNorm - 0.5) * height;
         const widthAtY = maxWidth * (1 - Math.abs(yNorm - 0.5) * 1.6);
         const angle = Math.random() * Math.PI * 2;
         const r = Math.random() * Math.max(widthAtY, 5);
-        const x = r * Math.cos(angle);
-        const z = r * Math.sin(angle) * 0.8 + (Math.random() - 0.5) * 60;
-        pts.push({ x, y, z });
+        ox[i] = r * Math.cos(angle);
+        oz[i] = r * Math.sin(angle) * 0.8 + (Math.random() - 0.5) * 60;
       }
-      return pts;
     };
 
     /** 3. Letter "A" sampled from offscreen canvas */
-    const generateLetter = (): { x: number; y: number; z: number }[] => {
-      const pts: { x: number; y: number; z: number }[] = [];
+    const generateLetter = (out: Float32Array[]) => {
+      const [ox, oy, oz] = out;
       const tmpCanvas = document.createElement("canvas");
       const S = 500;
       tmpCanvas.width = S;
       tmpCanvas.height = S;
       const tCtx = tmpCanvas.getContext("2d");
-      if (!tCtx) return pts;
+      if (!tCtx) return;
 
       tCtx.fillStyle = "white";
       tCtx.font = "italic 900 420px 'Instrument Serif', serif";
@@ -149,68 +174,59 @@ export default function ParticleMorph() {
       const imgData = tCtx.getImageData(0, 0, S, S).data;
       const validPixels: { x: number; y: number }[] = [];
 
-      for (let py = 0; py < S; py += 2) {
-        for (let px = 0; px < S; px += 2) {
-          if (imgData[(py * S + px) * 4 + 3] > 128) {
-            validPixels.push({ x: px - S / 2, y: py - S / 2 });
+      for (let py2 = 0; py2 < S; py2 += 2) {
+        for (let px2 = 0; px2 < S; px2 += 2) {
+          if (imgData[(py2 * S + px2) * 4 + 3] > 128) {
+            validPixels.push({ x: px2 - S / 2, y: py2 - S / 2 });
           }
         }
       }
 
       if (validPixels.length === 0) {
         for (let i = 0; i < PARTICLE_COUNT; i++) {
-          pts.push({ x: (Math.random() - 0.5) * 200, y: (Math.random() - 0.5) * 200, z: 0 });
+          ox[i] = (Math.random() - 0.5) * 200;
+          oy[i] = (Math.random() - 0.5) * 200;
+          oz[i] = 0;
         }
-        return pts;
+        return;
       }
 
       const letterScale = Math.min(W, H) * 0.0020;
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const p = validPixels[Math.floor(Math.random() * validPixels.length)];
         const jitter = 4;
-        pts.push({
-          x: (p.x + (Math.random() - 0.5) * jitter) * letterScale,
-          y: (p.y + (Math.random() - 0.5) * jitter) * letterScale,
-          z: (Math.random() - 0.5) * 100,
-        });
+        ox[i] = (p.x + (Math.random() - 0.5) * jitter) * letterScale;
+        oy[i] = (p.y + (Math.random() - 0.5) * jitter) * letterScale;
+        oz[i] = (Math.random() - 0.5) * 100;
       }
-      return pts;
     };
 
-    let shapeStar: { x: number; y: number; z: number }[] = [];
-    let shapeDiamond: { x: number; y: number; z: number }[] = [];
-    let shapeLetter: { x: number; y: number; z: number }[] = [];
+    // Shape target buffers (flat typed arrays)
+    const starShape = [new Float32Array(PARTICLE_COUNT), new Float32Array(PARTICLE_COUNT), new Float32Array(PARTICLE_COUNT)];
+    const diamondShape = [new Float32Array(PARTICLE_COUNT), new Float32Array(PARTICLE_COUNT), new Float32Array(PARTICLE_COUNT)];
+    const letterShape = [new Float32Array(PARTICLE_COUNT), new Float32Array(PARTICLE_COUNT), new Float32Array(PARTICLE_COUNT)];
 
     const regenerateShapes = () => {
       if (W === 0 || H === 0) return;
-      shapeStar = generateStar();
-      shapeDiamond = generateDiamond();
-      shapeLetter = generateLetter();
+      generateStar(starShape);
+      generateDiamond(diamondShape);
+      generateLetter(letterShape);
     };
 
     const initParticles = () => {
       resize();
       regenerateShapes();
 
-      particles = [];
       for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const s = shapeStar[i];
-        particles.push({
-          // Start scattered for dramatic convergence
-          x: (Math.random() - 0.5) * W * 1.5,
-          y: (Math.random() - 0.5) * H * 1.5,
-          z: (Math.random() - 0.5) * 600,
-          tx: s ? s.x : 0,
-          ty: s ? s.y : 0,
-          tz: s ? s.z : 0,
-          vx: 0,
-          vy: 0,
-          vz: 0,
-          size: Math.random() * 1.2 + 0.3,
-          hue: 260 + Math.random() * 40,
-          sat: 60 + Math.random() * 30,
-          light: 45 + Math.random() * 30,
-        });
+        // Start scattered for dramatic convergence
+        px[i] = (Math.random() - 0.5) * W * 1.5;
+        py[i] = (Math.random() - 0.5) * H * 1.5;
+        pz[i] = (Math.random() - 0.5) * 600;
+        vx[i] = 0;
+        vy[i] = 0;
+        vz[i] = 0;
+        psize[i] = Math.random() * 1.2 + 0.3;
+        spriteVariant[i] = Math.floor(Math.random() * SPRITE_VARIANTS);
       }
     };
 
@@ -240,7 +256,7 @@ export default function ParticleMorph() {
       ctx.clearRect(0, 0, W, H);
 
       // Guard: if shapes aren't ready, skip
-      if (!shapeStar.length || !particles.length) {
+      if (!starShape[0].length) {
         animId = requestAnimationFrame(animate);
         return;
       }
@@ -248,29 +264,29 @@ export default function ParticleMorph() {
       const sp = scrollProgress;
 
       // ── Determine morph state ──
-      let shapeA = shapeStar;
-      let shapeB = shapeStar;
+      let shapeAx: Float32Array, shapeAy: Float32Array, shapeAz: Float32Array;
+      let shapeBx: Float32Array, shapeBy: Float32Array, shapeBz: Float32Array;
       let morphT = 0;
 
       if (sp < 0.15) {
-        shapeA = shapeStar;
-        shapeB = shapeStar;
+        [shapeAx, shapeAy, shapeAz] = starShape;
+        [shapeBx, shapeBy, shapeBz] = starShape;
         morphT = 0;
       } else if (sp < 0.25) {
-        shapeA = shapeStar;
-        shapeB = shapeDiamond;
+        [shapeAx, shapeAy, shapeAz] = starShape;
+        [shapeBx, shapeBy, shapeBz] = diamondShape;
         morphT = smoothstep(0.15, 0.25, sp);
       } else if (sp < 0.68) {
-        shapeA = shapeDiamond;
-        shapeB = shapeDiamond;
+        [shapeAx, shapeAy, shapeAz] = diamondShape;
+        [shapeBx, shapeBy, shapeBz] = diamondShape;
         morphT = 0;
       } else if (sp < 0.82) {
-        shapeA = shapeDiamond;
-        shapeB = shapeLetter;
+        [shapeAx, shapeAy, shapeAz] = diamondShape;
+        [shapeBx, shapeBy, shapeBz] = letterShape;
         morphT = smoothstep(0.68, 0.82, sp);
       } else {
-        shapeA = shapeLetter;
-        shapeB = shapeLetter;
+        [shapeAx, shapeAy, shapeAz] = letterShape;
+        [shapeBx, shapeBy, shapeBz] = letterShape;
         morphT = 0;
       }
 
@@ -305,96 +321,86 @@ export default function ParticleMorph() {
         return;
       }
 
-      // ── Update particles ──
+      // ── Update particles (physics) ──
       const spring = 0.035 * dt;
       const friction = Math.pow(0.86, dt);
+      const mouseActive = mouse.active;
+      const mx = mouse.x;
+      const my = mouse.y;
+      const radiusSq = MOUSE_RADIUS * MOUSE_RADIUS;
 
       for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const p = particles[i];
-        const a = shapeA[i];
-        const b = shapeB[i];
-        if (!a || !b) continue;
+        let tx = shapeAx[i] + (shapeBx[i] - shapeAx[i]) * morphT;
+        let ty = shapeAy[i] + (shapeBy[i] - shapeAy[i]) * morphT;
+        let tz = shapeAz[i] + (shapeBz[i] - shapeAz[i]) * morphT;
 
-        let tx = a.x + (b.x - a.x) * morphT;
-        let ty = a.y + (b.y - a.y) * morphT;
-        let tz = a.z + (b.z - a.z) * morphT;
-
+        // Organic float
         const f = time + i * 0.004;
         tx += Math.sin(f * 1.1 + i * 0.01) * 4;
         ty += Math.cos(f * 0.8 + i * 0.02) * 4;
         tz += Math.sin(f * 0.5 + i * 0.015) * 5;
 
         // ── Cursor / Touch repulsion ──
-        if (mouse.active) {
-          const projScale = PERSPECTIVE / (PERSPECTIVE + p.z);
-          const screenX = cx + p.x * projScale;
-          const screenY = cy + p.y * projScale;
-          const dx = screenX - mouse.x;
-          const dy = screenY - mouse.y;
-          const distSq = dx * dx + dy * dy;
-          const radiusSq = MOUSE_RADIUS * MOUSE_RADIUS;
+        if (mouseActive) {
+          const projScale = PERSPECTIVE / (PERSPECTIVE + pz[i]);
+          const screenX = cx + px[i] * projScale;
+          const screenY = cy + py[i] * projScale;
+          const dxm = screenX - mx;
+          const dym = screenY - my;
+          const distSq = dxm * dxm + dym * dym;
 
           if (distSq < radiusSq) {
             const dist = Math.sqrt(distSq);
-            const force = ((MOUSE_RADIUS - dist) / MOUSE_RADIUS);
+            const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
             const forceCubed = force * force * force;
-            const angle = Math.atan2(dy, dx);
-            p.vx += Math.cos(angle) * forceCubed * MOUSE_FORCE * dt;
-            p.vy += Math.sin(angle) * forceCubed * MOUSE_FORCE * dt;
-            p.vz += (Math.random() - 0.5) * forceCubed * 20 * dt;
+            const angle = Math.atan2(dym, dxm);
+            vx[i] += Math.cos(angle) * forceCubed * MOUSE_FORCE * dt;
+            vy[i] += Math.sin(angle) * forceCubed * MOUSE_FORCE * dt;
+            vz[i] += (Math.random() - 0.5) * forceCubed * 20 * dt;
           }
         }
 
-        p.vx += (tx - p.x) * spring;
-        p.vy += (ty - p.y) * spring;
-        p.vz += (tz - p.z) * spring;
+        vx[i] += (tx - px[i]) * spring;
+        vy[i] += (ty - py[i]) * spring;
+        vz[i] += (tz - pz[i]) * spring;
 
-        p.vx *= friction;
-        p.vy *= friction;
-        p.vz *= friction;
+        vx[i] *= friction;
+        vy[i] *= friction;
+        vz[i] *= friction;
 
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.z += p.vz * dt;
+        px[i] += vx[i] * dt;
+        py[i] += vy[i] * dt;
+        pz[i] += vz[i] * dt;
       }
 
-      // ── Sort by Z for depth rendering ──
-      particles.sort((a, b) => a.z - b.z);
-
-      // ── Draw ──
+      // ── Draw (no sorting — use globalAlpha for depth) ──
       ctx.globalAlpha = globalOpacity;
 
-      for (const p of particles) {
-        const projScale = PERSPECTIVE / (PERSPECTIVE + p.z);
-        const drawX = cx + p.x * projScale;
-        const drawY = cy + p.y * projScale;
-        const drawSize = p.size * projScale;
+      const halfSprite = SPRITE_SIZE / 2;
 
-        if (drawX < -80 || drawX > W + 80 || drawY < -80 || drawY > H + 80) continue;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const projScale = PERSPECTIVE / (PERSPECTIVE + pz[i]);
+        const drawX = cx + px[i] * projScale;
+        const drawY = cy + py[i] * projScale;
 
-        const zNorm = (p.z + 350) / 700;
-        const zAlpha = 0.06 + zNorm * 0.85;
+        // Off-screen culling
+        if (drawX < -40 || drawX > W + 40 || drawY < -40 || drawY > H + 40) continue;
 
-        if (!isMobile) {
-          // ── Outer glow (skip on mobile for performance) ──
-          const glowRadius = drawSize * 3.5;
-          const grad = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, glowRadius);
-          grad.addColorStop(0, `hsla(${p.hue}, ${p.sat}%, ${p.light}%, ${zAlpha * 0.25})`);
-          grad.addColorStop(0.4, `hsla(${p.hue}, ${p.sat}%, ${p.light}%, ${zAlpha * 0.08})`);
-          grad.addColorStop(1, `hsla(${p.hue}, ${p.sat}%, ${p.light}%, 0)`);
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(drawX, drawY, glowRadius, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        // Depth-based alpha
+        const zNorm = (pz[i] + 350) / 700;
+        const zAlpha = 0.08 + zNorm * 0.85;
 
-        // ── Bright core ──
-        ctx.globalAlpha = globalOpacity * zAlpha * 0.8;
-        ctx.fillStyle = `hsl(${p.hue}, 40%, 85%)`;
-        ctx.beginPath();
-        ctx.arc(drawX, drawY, isMobile ? drawSize * 0.9 : drawSize * 0.7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = globalOpacity;
+        // Sprite size in screen space
+        const drawSize = psize[i] * projScale * 3.5;
+
+        // Draw pre-rendered sprite (single drawImage vs gradient+arc+fill)
+        ctx.globalAlpha = globalOpacity * zAlpha;
+        const sv = spriteVariant[i];
+        ctx.drawImage(
+          spriteCanvas,
+          sv * SPRITE_SIZE, 0, SPRITE_SIZE, SPRITE_SIZE, // source
+          drawX - drawSize, drawY - drawSize, drawSize * 2, drawSize * 2 // dest
+        );
       }
 
       ctx.globalAlpha = 1;

@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Starfield — 3D Galaxy Cruising Effect
- * Stars emit from a central vanishing point and move outward,
- * creating the illusion of flying forward through space.
+ * Starfield — 3D Galaxy Cruising Effect (High Performance)
+ * Stars emit from a central vanishing point and move outward.
  */
 export default function Starfield() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,28 +17,23 @@ export default function Starfield() {
     let W = window.innerWidth;
     let H = window.innerHeight;
 
-    // Mouse position for subtle camera shifting
     let mouseX = 0;
     let mouseY = 0;
     let targetMouseX = 0;
     let targetMouseY = 0;
 
-    // Detect mobile for performance
     const isMobile = window.innerWidth < 768;
-    const STAR_COUNT = isMobile ? 500 : 1500;
+    const STAR_COUNT = isMobile ? 250 : 500;
     const MAX_DEPTH = 1000;
-    const BASE_SPEED = 2.8;
+    const BASE_SPEED = 2.5;
 
-    interface Star {
-      x: number;
-      y: number;
-      z: number;
-      pz: number; // Previous Z (for drawing trails)
-      size: number;
-      hue: number;
-    }
-    
-    let stars: Star[] = [];
+    // Use typed arrays for maximum CPU cache efficiency
+    const x = new Float32Array(STAR_COUNT);
+    const y = new Float32Array(STAR_COUNT);
+    const z = new Float32Array(STAR_COUNT);
+    const pz = new Float32Array(STAR_COUNT);
+    const size = new Float32Array(STAR_COUNT);
+    const hue = new Float32Array(STAR_COUNT);
 
     const resize = () => {
       const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
@@ -55,16 +49,13 @@ export default function Starfield() {
 
     const init = () => {
       resize();
-      stars = [];
       for (let i = 0; i < STAR_COUNT; i++) {
-        stars.push({
-          x: (Math.random() - 0.5) * W * 4, // Spread wide in 3D space
-          y: (Math.random() - 0.5) * H * 4,
-          z: Math.random() * MAX_DEPTH,
-          pz: Math.random() * MAX_DEPTH,
-          size: Math.random() * 1.5 + 0.5,
-          hue: 240 + Math.random() * 60, // Violet/Purple spectrum
-        });
+        x[i] = (Math.random() - 0.5) * W * 4;
+        y[i] = (Math.random() - 0.5) * H * 4;
+        z[i] = Math.random() * MAX_DEPTH;
+        pz[i] = z[i];
+        size[i] = Math.random() * 1.5 + 0.5;
+        hue[i] = 240 + Math.random() * 60;
       }
     };
 
@@ -72,9 +63,8 @@ export default function Starfield() {
     
     const onResize = () => init();
     const onMouseMove = (e: MouseEvent) => {
-      // Mouse drives vanishing point shift (normalized -1 to 1)
-      targetMouseX = (e.clientX / W - 0.5) * 200;
-      targetMouseY = (e.clientY / H - 0.5) * 200;
+      targetMouseX = (e.clientX / W - 0.5) * 150;
+      targetMouseY = (e.clientY / H - 0.5) * 150;
     };
     
     window.addEventListener("resize", onResize);
@@ -83,64 +73,46 @@ export default function Starfield() {
     const animate = () => {
       ctx.clearRect(0, 0, W, H);
 
-      // Smoothly interpolate vanishing point towards mouse
       mouseX += (targetMouseX - mouseX) * 0.05;
       mouseY += (targetMouseY - mouseY) * 0.05;
 
-      // Center of screen + mouse shift
       const cx = W / 2 - mouseX;
       const cy = H / 2 - mouseY;
 
-      for (const star of stars) {
-        star.pz = star.z;
-        star.z -= BASE_SPEED; // Move star closer to camera
+      ctx.lineCap = "round";
 
-        // Reset if it passes the camera (z <= 0)
-        if (star.z <= 0) {
-          star.x = (Math.random() - 0.5) * W * 4;
-          star.y = (Math.random() - 0.5) * H * 4;
-          star.z = MAX_DEPTH;
-          star.pz = MAX_DEPTH;
+      for (let i = 0; i < STAR_COUNT; i++) {
+        pz[i] = z[i];
+        z[i] -= BASE_SPEED;
+
+        if (z[i] <= 0) {
+          x[i] = (Math.random() - 0.5) * W * 4;
+          y[i] = (Math.random() - 0.5) * H * 4;
+          z[i] = MAX_DEPTH;
+          pz[i] = MAX_DEPTH;
         }
 
-        // 3D Projection math
-        // proj = MAX_DEPTH / z
-        const proj = MAX_DEPTH / star.z;
-        const pProj = MAX_DEPTH / star.pz;
+        const proj = MAX_DEPTH / z[i];
+        const pProj = MAX_DEPTH / pz[i];
 
-        // Current screen coordinates
-        const sx = star.x * proj + cx;
-        const sy = star.y * proj + cy;
+        const sx = x[i] * proj + cx;
+        const sy = y[i] * proj + cy;
 
-        // Previous screen coordinates (for motion blur/trails)
-        const px = star.x * pProj + cx;
-        const py = star.y * pProj + cy;
+        // Skip rendering if off screen
+        if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
 
-        // Size scaling based on depth
-        const sSize = star.size * proj * 0.7; // Increased size multiplier
-        
-        // Alpha fades in from deep space
-        const alpha = Math.min(1, (MAX_DEPTH - star.z) / (MAX_DEPTH * 0.5));
+        const px = x[i] * pProj + cx;
+        const py = y[i] * pProj + cy;
 
-        // Draw star + motion trail
+        const sSize = size[i] * proj * 0.6;
+        const alpha = Math.min(1, (MAX_DEPTH - z[i]) / (MAX_DEPTH * 0.5));
+
+        ctx.lineWidth = Math.max(0.5, sSize);
+        ctx.strokeStyle = `hsla(${hue[i]}, 80%, 95%, ${alpha * 0.7})`;
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(sx, sy);
-        
-        // The closer it is (faster moving on screen), the longer the trail
-        // We use lineWidth for size
-        ctx.lineWidth = sSize;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = `hsla(${star.hue}, 80%, 95%, ${alpha})`; // Increased brightness
         ctx.stroke();
-
-        // Optional: draw core for very close stars
-        if (star.z < MAX_DEPTH * 0.3) {
-          ctx.beginPath();
-          ctx.arc(sx, sy, sSize * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${star.hue}, 80%, 100%, ${alpha})`;
-          ctx.fill();
-        }
       }
 
       animId = requestAnimationFrame(animate);
