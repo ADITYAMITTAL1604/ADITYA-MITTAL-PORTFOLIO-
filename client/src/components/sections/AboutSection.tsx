@@ -50,10 +50,10 @@ export default function AboutSection() {
     <section id="about" ref={sectionRef} className="relative z-10 px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem] py-[8rem] md:py-[12rem]">
       <div className="w-full">
         {/* Content */}
-        <div className="flex flex-col gap-12">
-          <h2 data-s-lines className="heading-2 font-instrument-serif text-left">About</h2>
+        <div className="flex flex-col gap-16 items-center text-center max-w-4xl mx-auto">
+          <div className="flex flex-col gap-8 w-full items-center">
+            <h2 data-s-lines className="heading-2 font-instrument-serif text-center">About</h2>
 
-          <div className="flex flex-col gap-8 max-w-3xl text-left">
             <p data-s-print-opacity className="body-lg text-[var(--muted-foreground)]">
               I'm Aditya — a B.Tech Computer Science undergraduate (CGPA 9.45) at GGSIPU, NEW DELHI who got into tech through a love for problem-solving. I care about algorithmic efficiency, scalable system architecture, and building platforms that perform under pressure.
             </p>
@@ -67,9 +67,9 @@ export default function AboutSection() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-4 max-w-3xl text-left">
-            <h3 data-s-lines className="heading-5 font-instrument-serif">Currently</h3>
-            <p data-s-print-opacity className="body-md text-[var(--muted-foreground)]">
+          <div className="flex flex-col gap-8 w-full items-center">
+            <h2 data-s-lines className="heading-2 font-instrument-serif text-center">Currently</h2>
+            <p data-s-print-opacity className="body-lg text-[var(--muted-foreground)]">
               Outside of coursework, I explore predictive modeling, data structures in Java, and the boundaries between AI and human interaction. Currently mastering Data Structures and Algorithms and building tools that automate complex business workflows.
             </p>
           </div>
