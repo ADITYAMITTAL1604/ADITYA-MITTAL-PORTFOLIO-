@@ -46,17 +46,22 @@ export default function ParticleMorph() {
     let particles: P[] = [];
 
     // ── Resize (HiDPI aware) ──
+    let isInitialized = false;
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2);
-      W = window.innerWidth;
-      H = window.innerHeight;
+      W = window.innerWidth || document.documentElement.clientWidth || 1000;
+      H = window.innerHeight || document.documentElement.clientHeight || 800;
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       canvas.style.width = `${W}px`;
       canvas.style.height = `${H}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      
+      // Regenerate shapes on resize to ensure correct scaling
+      if (isInitialized) {
+        regenerateShapes();
+      }
     };
-    resize();
     window.addEventListener("resize", resize);
 
     // ── Scroll tracking ──
@@ -165,30 +170,50 @@ export default function ParticleMorph() {
       return pts;
     };
 
-    // Generate all shapes
-    const shapeStar = generateStar();
-    const shapeDiamond = generateDiamond();
-    const shapeLetter = generateLetter();
+    let shapeStar: { x: number; y: number; z: number }[] = [];
+    let shapeDiamond: { x: number; y: number; z: number }[] = [];
+    let shapeLetter: { x: number; y: number; z: number }[] = [];
 
-    // ── Initialize particles (scattered for dramatic entry) ──
-    particles = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const s = shapeStar[i];
-      particles.push({
-        // Start scattered across the viewport for dramatic intro convergence
-        x: (Math.random() - 0.5) * W * 1.5,
-        y: (Math.random() - 0.5) * H * 1.5,
-        z: (Math.random() - 0.5) * 600,
-        tx: s.x,
-        ty: s.y,
-        tz: s.z,
-        vx: 0,
-        vy: 0,
-        vz: 0,
-        size: Math.random() * 1.2 + 0.3, // Smaller particles
-        hue: 260 + Math.random() * 40, // Deep purple to violet
-        sat: 60 + Math.random() * 30,
-        light: 45 + Math.random() * 30, // Less bright so white text stays readable
+    const regenerateShapes = () => {
+      if (W === 0 || H === 0) return;
+      shapeStar = generateStar();
+      shapeDiamond = generateDiamond();
+      shapeLetter = generateLetter();
+    };
+
+    const initParticles = () => {
+      resize(); // ensure sizes are correct
+      regenerateShapes();
+      
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const s = shapeStar[i];
+        particles.push({
+          x: (Math.random() - 0.5) * W * 1.5,
+          y: (Math.random() - 0.5) * H * 1.5,
+          z: (Math.random() - 0.5) * 600,
+          tx: s ? s.x : 0,
+          ty: s ? s.y : 0,
+          tz: s ? s.z : 0,
+          vx: 0,
+          vy: 0,
+          vz: 0,
+          size: Math.random() * 1.2 + 0.3,
+          hue: 260 + Math.random() * 40,
+          sat: 60 + Math.random() * 30,
+          light: 45 + Math.random() * 30,
+        });
+      }
+      isInitialized = true;
+    };
+
+    // Initialize immediately
+    initParticles();
+    
+    // Also re-init if fonts load later (to fix the letter A shape)
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        if (isInitialized) regenerateShapes();
       });
     }
 
@@ -221,7 +246,7 @@ export default function ParticleMorph() {
       let shapeB = shapeStar;
       let morphT = 0;
 
-      if (sp < 0.15) {
+      if (sp < 0.15 || !shapeStar.length || !shapeDiamond.length || !shapeLetter.length) {
         // Pure star
         shapeA = shapeStar;
         shapeB = shapeStar;
