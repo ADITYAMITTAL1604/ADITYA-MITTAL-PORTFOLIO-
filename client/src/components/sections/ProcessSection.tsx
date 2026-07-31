@@ -114,7 +114,7 @@ export default function ProcessSection() {
         </div>
 
         {/* Right: Scrolling steps */}
-        <div className="flex flex-col gap-[7.5rem] pt-[50vh] px-12 pb-[50vh]">
+        <div className="flex flex-col gap-[5rem] pt-[30vh] px-12 pb-[30vh]">
           {steps.map((step, i) => (
             <div key={i} data-s-fade-in-out className="flex flex-col max-w-[20rem] transition-opacity">
               <p className="body-xl text-white/40">{step.number}</p>

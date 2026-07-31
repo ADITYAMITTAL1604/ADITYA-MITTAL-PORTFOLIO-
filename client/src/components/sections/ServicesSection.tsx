@@ -99,7 +99,7 @@ export default function ServicesSection() {
           end: "bottom bottom",
           scrub: 0.5, 
           pin: containerRef.current,
-          pinSpacing: false,
+          pinSpacing: true,
         },
       });
 
