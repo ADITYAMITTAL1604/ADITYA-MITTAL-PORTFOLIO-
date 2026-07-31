@@ -191,13 +191,7 @@ export default function FeaturedWork() {
           ))}
         </div>
 
-        {/* Bottom text + CTA */}
-        <div className="flex flex-col items-start gap-6 pt-16">
-          <p data-s-lines className="body-md max-w-[25rem]">
-            I engineer software systems that blend performance, scalability, and AI — transforming complex problems into production-ready platforms and data-driven solutions.
-          </p>
-          <PillButton href="#work">View all works</PillButton>
-        </div>
+
       </div>
 
       {/* Right side placeholder (keeps grid structure balanced) */}
