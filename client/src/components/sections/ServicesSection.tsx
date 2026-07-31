@@ -69,21 +69,21 @@ const serviceGroups = [
 
 export default function ServicesSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const groupRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const mm = gsap.matchMedia();
 
     mm.add("(min-width: 768px)", () => {
-      if (!sectionRef.current || !containerRef.current) return;
+      if (!sectionRef.current || !panelRef.current) return;
 
       const groups = groupRefs.current.filter(Boolean) as HTMLDivElement[];
       if (groups.length < 2) return;
 
-      // Position second and third groups absolutely on top of first, offset downwards
+      // Position second and third groups absolutely on top of first
       groups.slice(1).forEach((g) => {
-        gsap.set(g, { autoAlpha: 0, y: 80, position: "absolute", inset: 0 });
+        gsap.set(g, { autoAlpha: 0, y: 60, position: "absolute", inset: 0 });
       });
 
       const wrapper = groups[0].parentElement;
@@ -91,24 +91,25 @@ export default function ServicesSection() {
         wrapper.style.position = "relative";
       }
 
-      // Pin the container and execute sequential swipe transitions
+      // Pin the panel, let GSAP handle all spacing
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: sectionRef.current,
+          trigger: panelRef.current,
           start: "top top",
-          end: "bottom bottom",
-          scrub: 0.5, 
-          pin: containerRef.current,
+          end: "+=200%",
+          scrub: 0.5,
+          pin: true,
           pinSpacing: true,
+          anticipatePin: 1,
         },
       });
 
-      tl.to(groups[0], { autoAlpha: 0, y: 40, duration: 1, ease: "power1.inOut" })
+      tl.to(groups[0], { autoAlpha: 0, y: 30, duration: 1, ease: "power1.inOut" })
         .to(groups[1], { autoAlpha: 1, y: 0, duration: 1, ease: "power1.inOut" }, "<")
-        .to({}, { duration: 0.5 })
-        .to(groups[1], { autoAlpha: 0, y: 40, duration: 1, ease: "power1.inOut" })
+        .to({}, { duration: 0.4 })
+        .to(groups[1], { autoAlpha: 0, y: 30, duration: 1, ease: "power1.inOut" })
         .to(groups[2], { autoAlpha: 1, y: 0, duration: 1, ease: "power1.inOut" }, "<")
-        .to({}, { duration: 0.5 });
+        .to({}, { duration: 0.4 });
 
       return () => { tl.kill(); };
     });
@@ -117,10 +118,10 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative z-10 h-[300vh] hidden md:block">
+    <section ref={sectionRef} className="relative z-10 hidden md:block mt-[8rem]">
       <div
-        ref={containerRef}
-        className="sticky top-0 h-screen pt-20 md:pt-[7.5rem] lg:pt-20 xl:pt-[10rem] flex flex-col justify-center gap-12 lg:gap-20"
+        ref={panelRef}
+        className="h-screen flex flex-col justify-center gap-12 lg:gap-16"
       >
         {/* Top: Heading + Description */}
         <div className="w-full px-8 lg:px-12 xl:px-16 2xl:px-[7.5rem]">
