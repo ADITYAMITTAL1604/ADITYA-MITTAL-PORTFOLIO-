@@ -8,7 +8,7 @@ import ServicesMobile from "@/components/sections/ServicesMobile";
 import ProcessSection from "@/components/sections/ProcessSection";
 import AboutSection from "@/components/sections/AboutSection";
 import ToolsGrid from "@/components/sections/ToolsGrid";
-import PurposeSection from "@/components/sections/PurposeSection";
+import AchievementsSection from "@/components/sections/AchievementsSection";
 import FooterCTA from "@/components/sections/FooterCTA";
 import ContactDrawer from "@/components/ContactDrawer";
 import Navbar from "@/components/Navbar";
@@ -104,7 +104,7 @@ export default function Home() {
         <ProcessSection />
         <AboutSection />
         <ToolsGrid />
-        <PurposeSection />
+        <AchievementsSection />
         <FooterCTA onContactOpen={handleContactOpen} />
       </main>
 
