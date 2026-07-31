@@ -97,23 +97,17 @@ export default function ServicesSection() {
           trigger: sectionRef.current,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.1, 
+          scrub: 0.5, 
           pin: containerRef.current,
           pinSpacing: false,
         },
       });
 
-      // 1. Group 0 swipes DOWN and fades out
-      tl.to(groups[0], { autoAlpha: 0, y: 80, duration: 1, ease: "power2.inOut" })
-      // 2. Group 1 swipes UP and fades in
-        .to(groups[1], { autoAlpha: 1, y: 0, duration: 1, ease: "power2.inOut" })
-      // (Hold briefly)
+      tl.to(groups[0], { autoAlpha: 0, y: 40, duration: 1, ease: "power1.inOut" })
+        .to(groups[1], { autoAlpha: 1, y: 0, duration: 1, ease: "power1.inOut" }, "<")
         .to({}, { duration: 0.5 })
-      // 3. Group 1 swipes DOWN and fades out
-        .to(groups[1], { autoAlpha: 0, y: 80, duration: 1, ease: "power2.inOut" })
-      // 4. Group 2 swipes UP and fades in
-        .to(groups[2], { autoAlpha: 1, y: 0, duration: 1, ease: "power2.inOut" })
-      // Hold last frame
+        .to(groups[1], { autoAlpha: 0, y: 40, duration: 1, ease: "power1.inOut" })
+        .to(groups[2], { autoAlpha: 1, y: 0, duration: 1, ease: "power1.inOut" }, "<")
         .to({}, { duration: 0.5 });
 
       return () => { tl.kill(); };
@@ -123,18 +117,18 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative z-10 h-[600vh] hidden md:block">
+    <section ref={sectionRef} className="relative z-10 h-[300vh] hidden md:block">
       <div
         ref={containerRef}
-        className="sticky top-0 h-screen pt-20 md:pt-[7.5rem] lg:pt-20 xl:pt-[10rem] flex flex-col justify-between"
+        className="sticky top-0 h-screen pt-20 md:pt-[7.5rem] lg:pt-20 xl:pt-[10rem] flex flex-col justify-center gap-12 lg:gap-20"
       >
         {/* Top: Heading + Description */}
         <div className="w-full px-8 lg:px-12 xl:px-16 2xl:px-[7.5rem]">
-          <div className="flex flex-col gap-6 w-full max-w-4xl text-left items-start">
-            <h2 className="overflow-hidden heading-2 font-instrument-serif w-full">
+          <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto text-center items-center">
+            <h2 className="heading-2 font-instrument-serif w-full">
               From Data to Deployment, I've Got You Covered.
             </h2>
-            <p className="body-md w-full text-[var(--muted-foreground)]">
+            <p className="body-md w-full max-w-2xl text-[var(--muted-foreground)]">
               I build intelligent software systems that solve real problems — AI pipelines, scalable backends, and full-stack platforms that drive impact.
             </p>
           </div>
