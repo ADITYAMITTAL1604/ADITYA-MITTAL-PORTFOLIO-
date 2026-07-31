@@ -69,19 +69,19 @@ export default function HeroSection() {
       </div>
 
       {/* Bottom: CTA + Description */}
-      <div className="w-fit lg:w-auto ml-auto lg:ml-[initial] gap-16 flex flex-col-reverse lg:flex-row items-start lg:items-end justify-start lg:justify-between">
-        <div ref={ctaRef} className="flex gap-2 lg:gap-4 opacity-0">
-          <PillButton href="/resume.pdf" download="Aditya_Mittal_Resume.pdf">Download resume</PillButton>
-          <PillButton href="#work">View work</PillButton>
-        </div>
-
-        <div className="w-full md:w-[22.5rem] md:shrink-0">
+      <div className="w-full gap-8 md:gap-16 flex flex-col lg:flex-row items-start lg:items-end justify-start lg:justify-between mt-12 md:mt-24">
+        <div className="w-full md:w-[26rem] md:shrink-0">
           <p
             ref={descRef}
-            className="body-md md:text-justify opacity-0 h-fit"
+            className="body-md text-left opacity-0 h-fit"
           >
             I work at the intersection of full-stack engineering and AI. From developing scalable backend pipelines and ML models to crafting robust, data-driven platforms. Driven by high performance and impact.
           </p>
+        </div>
+
+        <div ref={ctaRef} className="flex gap-4 opacity-0 w-full lg:w-auto mt-4 lg:mt-0">
+          <PillButton href="/resume.pdf" download="Aditya_Mittal_Resume.pdf">Download resume</PillButton>
+          <PillButton href="#work">View work</PillButton>
         </div>
       </div>
     </section>

@@ -36,6 +36,7 @@ export default function ServicesMobile() {
 
   useEffect(() => {
     if (!sectionRef.current) return;
+    const ctx = gsap.context(() => {
       const headingEl = sectionRef.current!.querySelector(".mobile-heading");
       if (headingEl) {
         const text = headingEl.textContent || "";
@@ -67,27 +68,28 @@ export default function ServicesMobile() {
           }
         );
       });
+    }, sectionRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
     <section ref={sectionRef} className="relative z-10 block md:hidden">
-      <div className="pt-[10rem] pb-[20rem] flex flex-col justify-between gap-[7.5rem]">
+      <div className="pt-[8rem] pb-[8rem] flex flex-col justify-between gap-[5rem]">
         {/* Heading */}
-        <div className="px-8">
-          <div className="flex flex-col gap-6 w-fit mx-auto">
-            <h2 className="mobile-heading heading-2 font-instrument-serif w-full max-w-[27.5rem] indent-20">
+        <div className="px-6">
+          <div className="flex flex-col gap-6 w-full text-left items-start">
+            <h2 className="mobile-heading heading-2 font-instrument-serif w-full max-w-[27.5rem]">
               From Data to Deployment, I've Got You Covered.
             </h2>
-            <p data-s-fade-in className="body-sm md:max-w-[26.25rem] ml-20">
+            <p data-s-fade-in className="body-sm w-full text-[var(--muted-foreground)]">
               I build intelligent software systems that solve real problems — AI pipelines, scalable backends, and full-stack platforms that drive impact.
             </p>
           </div>
         </div>
 
         {/* Cards */}
-        <div className="relative flex flex-col gap-8 max-w-[30rem] ml-auto">
+        <div className="relative flex flex-col gap-8 w-full">
           {serviceGroups.map((group, idx) => (
             <div key={idx} className="flex flex-col gap-2">
               <p data-s-fade-in className="heading-3 font-instrument-serif px-8 pb-2">{group.title}</p>

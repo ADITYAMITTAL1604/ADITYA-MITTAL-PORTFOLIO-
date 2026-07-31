@@ -71,9 +71,9 @@ export default function AchievementsSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative z-10 px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem] py-[10rem] md:py-[15rem]">
-      <div className="max-w-5xl mx-auto flex flex-col gap-12 md:gap-16">
-        <div className="flex flex-col gap-6 w-fit mx-auto text-center items-center">
+    <section ref={sectionRef} className="relative z-10 px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem] py-[8rem] md:py-[12rem]">
+      <div className="w-full mx-auto flex flex-col gap-12 md:gap-16">
+        <div className="flex flex-col gap-6 w-full text-left items-start">
           <h2 data-s-lines className="heading-2 font-instrument-serif w-full">
             Achievements
           </h2>

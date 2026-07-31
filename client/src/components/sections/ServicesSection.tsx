@@ -129,12 +129,12 @@ export default function ServicesSection() {
         className="sticky top-0 h-screen pt-20 md:pt-[7.5rem] lg:pt-20 xl:pt-[10rem] flex flex-col justify-between"
       >
         {/* Top: Heading + Description */}
-        <div className="md:w-1/2 md:ml-auto">
-          <div className="flex flex-col gap-6 w-fit mx-auto">
-            <h2 className="overflow-hidden heading-2 font-instrument-serif w-full max-w-[27.5rem] lg:max-w-[32.5rem] xl:max-w-[40rem] indent-20">
+        <div className="w-full px-8 lg:px-12 xl:px-16 2xl:px-[7.5rem]">
+          <div className="flex flex-col gap-6 w-full max-w-4xl text-left items-start">
+            <h2 className="overflow-hidden heading-2 font-instrument-serif w-full">
               From Data to Deployment, I've Got You Covered.
             </h2>
-            <p className="body-sm md:max-w-[26.25rem] ml-20">
+            <p className="body-md w-full text-[var(--muted-foreground)]">
               I build intelligent software systems that solve real problems — AI pipelines, scalable backends, and full-stack platforms that drive impact.
             </p>
           </div>

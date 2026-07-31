@@ -83,7 +83,7 @@ export default function ProcessSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} data-dissolve-out className="relative mt-[6rem] md:mt-[10rem]">
+    <section ref={sectionRef} data-dissolve-out className="relative mt-[8rem] md:mt-[12rem]">
       {/* Decorative center line + sparkle (desktop only) */}
       <div className="hidden md:block absolute top-0 left-1/2 w-px h-full">
         <div className="absolute top-0 left-1/2 w-px h-full md:bg-white/10" />
@@ -103,11 +103,11 @@ export default function ProcessSection() {
       {/* ═══ DESKTOP LAYOUT ═══ */}
       <div className="hidden md:grid md:grid-cols-2">
         {/* Left: Sticky heading */}
-        <div className="h-fit md:sticky md:top-1/2 md:-translate-y-1/2 -mb-[45vh] flex flex-col md:items-end items-start md:justify-center gap-4 xl:gap-6 p-8 md:p-12">
-          <h2 className="heading-2 font-instrument-serif md:text-right max-w-[20rem] lg:max-w-[25rem] xl:max-w-[32.5rem]">
+        <div className="h-fit md:sticky md:top-1/2 md:-translate-y-1/2 -mb-[45vh] flex flex-col items-start md:justify-center gap-4 xl:gap-6 p-8 md:p-12">
+          <h2 className="heading-2 font-instrument-serif text-left max-w-[20rem] lg:max-w-[25rem] xl:max-w-[32.5rem]">
             A methodology built around scalability and precision.
           </h2>
-          <p className="body-md max-w-[22.5rem] md:text-right text-[var(--muted-foreground)]">
+          <p className="body-md max-w-[22.5rem] text-left text-[var(--muted-foreground)]">
             No technical debt, no deployment chaos. Just a clear path from system design to a robust, intelligent product.
           </p>
           <PillButton>Let's build something</PillButton>

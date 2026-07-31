@@ -101,27 +101,25 @@ export default function StatementSection() {
     <section
       ref={sectionRef}
       data-dissolve-out
-      className="relative z-10 mt-[30rem] px-8 md:px-0"
+      className="relative z-10 mt-[8rem] md:mt-[12rem] px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem]"
     >
-      <div className="lg:max-w-[50vw] lg:w-1/2 md:flex justify-end lg:justify-end pt-[20rem]">
-        <div className="w-fit md:w-auto relative z-[1] flex flex-col gap-6 lg:gap-12 xl:gap-[3rem] lg:items-end md:px-12 lg:px-0">
-          <h2
-            ref={headingRef}
-            className="heading-2 font-instrument-serif md:ml-auto lg:ml-0 w-fit md:w-full"
-          >
-            {/* Content injected by GSAP */}
-            Architecting Scalable Solutions Through Code, Data, and Engineering.
-          </h2>
+      <div className="w-full flex flex-col gap-6 md:gap-10">
+        <h2
+          ref={headingRef}
+          className="heading-2 font-instrument-serif text-left max-w-4xl"
+        >
+          {/* Content injected by GSAP */}
+          Architecting Scalable Solutions Through Code, Data, and Engineering.
+        </h2>
 
-          <div className="flex flex-col items-start gap-4 lg:gap-5 xl:gap-8 w-fit">
-            <p
-              ref={bodyRef}
-              className="body-md md:max-w-[26.25rem]"
-            >
-              CS Undergrad at IP University with a focus on AI pipelines, full-stack architecture, and machine learning. Proven track record of building production-ready platforms that solve real-world problems.
-            </p>
-            <PillButton href="#about">Learn more</PillButton>
-          </div>
+        <div className="flex flex-col items-start gap-4 md:gap-8 w-full max-w-2xl">
+          <p
+            ref={bodyRef}
+            className="body-md text-left text-[var(--muted-foreground)]"
+          >
+            CS Undergrad at IP University with a focus on AI pipelines, full-stack architecture, and machine learning. Proven track record of building production-ready platforms that solve real-world problems.
+          </p>
+          <PillButton href="#about">Learn more</PillButton>
         </div>
       </div>
     </section>

@@ -47,30 +47,13 @@ export default function AboutSection() {
   }, []);
 
   return (
-    <section id="about" ref={sectionRef} className="relative z-10 px-8 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem] py-[10rem] md:py-[15rem]">
-      <div className="grid md:grid-cols-[1fr_2fr] gap-16 md:gap-24">
-        {/* Left: decorative vertical line with glow dots */}
-        <div className="hidden md:flex flex-col items-center">
-          <div className="w-px h-full bg-gradient-to-b from-transparent via-white/10 to-transparent relative">
-            {[0.15, 0.35, 0.55, 0.75].map((pos, i) => (
-              <div
-                key={i}
-                className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-purple-400/50 animate-pulse"
-                style={{
-                  top: `${pos * 100}%`,
-                  animationDelay: `${i * 0.7}s`,
-                  animationDuration: `${3 + i * 0.5}s`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
+    <section id="about" ref={sectionRef} className="relative z-10 px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem] py-[8rem] md:py-[12rem]">
+      <div className="w-full">
+        {/* Content */}
+        <div className="flex flex-col gap-12">
+          <h2 data-s-lines className="heading-2 font-instrument-serif text-left">About</h2>
 
-        {/* Right: Text content */}
-        <div className="flex flex-col gap-16">
-          <h2 data-s-lines className="heading-2 font-instrument-serif">About</h2>
-
-          <div className="flex flex-col gap-8 max-w-2xl">
+          <div className="flex flex-col gap-8 max-w-3xl text-left">
             <p data-s-print-opacity className="body-lg text-[var(--muted-foreground)]">
               I'm Aditya — a B.Tech Computer Science undergraduate (CGPA 9.45) at GGSIPU, NEW DELHI who got into tech through a love for problem-solving. I care about algorithmic efficiency, scalable system architecture, and building platforms that perform under pressure.
             </p>
@@ -84,7 +67,7 @@ export default function AboutSection() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-4 max-w-2xl">
+          <div className="flex flex-col gap-4 max-w-3xl text-left">
             <h3 data-s-lines className="heading-5 font-instrument-serif">Currently</h3>
             <p data-s-print-opacity className="body-md text-[var(--muted-foreground)]">
               Outside of coursework, I explore predictive modeling, data structures in Java, and the boundaries between AI and human interaction. Currently mastering Data Structures and Algorithms and building tools that automate complex business workflows.

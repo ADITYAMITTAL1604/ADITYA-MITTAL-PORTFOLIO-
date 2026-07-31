@@ -126,7 +126,7 @@ export default function FeaturedWork() {
     <section
       ref={sectionRef}
       data-dissolve-in
-      className="relative z-10 px-8 md:px-0 pt-[20rem] grid grid-cols-1 md:grid-cols-[1fr_60vw_1fr] lg:grid-cols-[1fr_600px_1fr] xl:grid-cols-[1fr_800px_1fr] gap-8"
+      className="relative z-10 px-6 md:px-0 mt-[8rem] md:mt-[12rem] grid grid-cols-1 md:grid-cols-[1fr_60vw_1fr] lg:grid-cols-[1fr_600px_1fr] xl:grid-cols-[1fr_800px_1fr] gap-8"
     >
       {/* Left: Sticky project titles (desktop) */}
       <div className="hidden md:block sticky top-1/2 h-fit -translate-y-1/2">
@@ -151,9 +151,9 @@ export default function FeaturedWork() {
       {/* Center: Main content */}
       <div className="flex flex-col gap-12 lg:gap-20 xl:gap-[7.5rem]">
         {/* Section header */}
-        <div className="flex flex-col gap-4">
-          <h2 data-s-lines className="text-center body-md uppercase">Featured work</h2>
-          <p data-s-print-opacity className="text-center heading-2 leading-[1.1em] font-instrument-serif">
+        <div className="flex flex-col gap-4 items-start text-left">
+          <h2 data-s-lines className="body-md uppercase">Featured work</h2>
+          <p data-s-print-opacity className="heading-2 leading-[1.1em] font-instrument-serif">
             Building intelligent applications that scale, rooted in a foundation of robust engineering and AI.
           </p>
         </div>
