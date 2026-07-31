@@ -23,45 +23,15 @@ export default function StatementSection() {
 
         // Rebuild with spans for each word
         headingRef.current.innerHTML = "";
-        const lines = [
-          { text: "Architecting Scalable Solutions", align: "flex md:ml-auto" },
-          { text: "Through Code, Data,", align: "" },
-          { text: "and Engineering.", align: "" },
-        ];
-
-        const span = document.createElement("span");
-        span.className = "flex flex-col md:w-fit";
-
-        lines.forEach((line, lineIdx) => {
-          const lineSpan = document.createElement("span");
-          lineSpan.className = lineIdx === 0 ? "flex md:w-fit md:ml-auto" : "flex flex-col";
-
-          if (lineIdx === 0) {
-            line.text.split(/\s+/).forEach((w) => {
-              const wordSpan = document.createElement("span");
-              wordSpan.className = "inline-block mr-[0.3em]";
-              wordSpan.style.opacity = "0.12";
-              wordSpan.textContent = w;
-              lineSpan.appendChild(wordSpan);
-            });
-          } else {
-            const inner = document.createElement("span");
-            line.text.split(/\s+/).forEach((w) => {
-              const wordSpan = document.createElement("span");
-              wordSpan.className = "inline-block mr-[0.3em]";
-              wordSpan.style.opacity = "0.12";
-              wordSpan.textContent = w;
-              inner.appendChild(wordSpan);
-            });
-            lineSpan.appendChild(inner);
-          }
-
-          span.appendChild(lineSpan);
+        words.forEach((w) => {
+          const wordSpan = document.createElement("span");
+          wordSpan.className = "inline-block mr-[0.3em]";
+          wordSpan.style.opacity = "0.12";
+          wordSpan.textContent = w;
+          headingRef.current!.appendChild(wordSpan);
         });
 
-        headingRef.current.appendChild(span);
-
-        const wordSpans = headingRef.current.querySelectorAll("span[style]");
+        const wordSpans = headingRef.current.querySelectorAll("span");
         gsap.to(wordSpans, {
           opacity: 1,
           stagger: 0.06,
@@ -101,21 +71,21 @@ export default function StatementSection() {
     <section
       ref={sectionRef}
       data-dissolve-out
-      className="relative z-10 mt-[8rem] md:mt-[12rem] px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem]"
+      className="relative z-10 mt-[8rem] md:mt-[12rem] px-6 md:px-12 lg:px-16 xl:px-24 2xl:px-[7.5rem] flex flex-col items-center text-center"
     >
-      <div className="w-full flex flex-col gap-6 md:gap-10">
+      <div className="w-full flex flex-col items-center gap-8 md:gap-12 max-w-4xl">
         <h2
           ref={headingRef}
-          className="heading-2 font-instrument-serif text-left max-w-4xl"
+          className="heading-2 font-instrument-serif text-center"
         >
           {/* Content injected by GSAP */}
           Architecting Scalable Solutions Through Code, Data, and Engineering.
         </h2>
 
-        <div className="flex flex-col items-start gap-4 md:gap-8 w-full max-w-2xl">
+        <div className="flex flex-col items-center gap-6 md:gap-10 w-full max-w-2xl">
           <p
             ref={bodyRef}
-            className="body-md text-left text-[var(--muted-foreground)]"
+            className="body-md text-center text-[var(--muted-foreground)]"
           >
             CS Undergrad at IP University with a focus on AI pipelines, full-stack architecture, and machine learning. Proven track record of building production-ready platforms that solve real-world problems.
           </p>
